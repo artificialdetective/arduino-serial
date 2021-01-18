@@ -76,8 +76,8 @@ return hSerial;
 int sendtoPort(HANDLE serialPort, const char *sendText) {
 /*
  Feeds text characters to the connected serial port for the Arduino to read.
- The characters will be cueued in a buffer until the Arduino program has read them all.
- Windows serial ports can cueue a maximum of 64 unread characters.
+ The characters will be cued in a buffer until the Arduino program has read them all.
+ Windows serial ports can cue a maximum of 64 unread characters.
 */
 if(!serialPort) {return 0;}
 DWORD bytesSent = 0;  
