@@ -1,7 +1,7 @@
 # arduino-serial
 Serial port interface for Arduino microcontrollers
 
-This repository contains a basic interface for communication between a computer and an Arduino microcontroller through a serial port. It consists of two files written in C (for the Arduino) and C++ (for the computer):
+This repository contains a basic interface for communication between a computer and an Arduino microcontroller through a serial port. It consists of two files written in C (Arduino's standard) and C++ (for the computer):
 
 "arduino_serial_interface_arduino-side.ino" should be uploaded to the Arduino using the Arduino's software.
 
