@@ -11,24 +11,40 @@
 */
 
 
-#include <windows.h>
 #include <stdio.h>
-#include <ctype.h>   // for isspace() etc
-#include <time.h>    // for time(0)
+#include <ctype.h>       // for isspace() etc
+#include <time.h>        // for time(0)
+#define WINVER 0x0500    // required to use SendInput() to simulate mouse presses. define before windows.
+#include <windows.h>
 
 
-// Function declarations:
+// Main function declarations:
 HANDLE connecttoPort(int portnr);
 int sendtoPort(HANDLE serialPort, const char *sendText);
 char readfromPort(HANDLE serialPort);
 void closePort(HANDLE serialPort);
 
 // Helper functions:
-bool keyPressed(int k) {return GetAsyncKeyState(k);}
 void showWarning(const char *text) {MessageBox(NULL, text, "error", MB_SETFOREGROUND | MB_OK);}
 
+bool keyPressed(int k) {return GetAsyncKeyState(k);}
+
+void pressKey(const int key, bool down = true) {
+/*
+ Simulates a key press or release.
+ e.g. use "pressKey(VkKeyScan('A'), true);" to press the 'a' key, or false to release.
+*/
+INPUT Input = {INPUT_KEYBOARD};
+Input.ki.wVk = key;      //set which key to press.
+Input.ki.dwFlags = (down)? 0 : KEYEVENTF_KEYUP;
+SendInput(1, &Input, sizeof(INPUT));
+// Give external programs a little time to process the simulated keypress.
+Sleep(50);
+}
 
 
+
+// Main functions:
 HANDLE connecttoPort(int portnr) {
 /*
  Connects to specified serial port number, e.g. "COM4".
@@ -76,8 +92,8 @@ return hSerial;
 int sendtoPort(HANDLE serialPort, const char *sendText) {
 /*
  Feeds text characters to the connected serial port for the Arduino to read.
- The characters will be cued in a buffer until the Arduino program has read them all.
- Windows serial ports can cue a maximum of 64 unread characters.
+ The characters will be cueued in a buffer until the Arduino program has read them all.
+ Windows serial ports can cueue a maximum of 64 unread characters.
 */
 if(!serialPort) {return 0;}
 DWORD bytesSent = 0;  
@@ -156,8 +172,15 @@ while(!keyPressed(VK_ESCAPE) && time(0) < endTime) {
     }
 
     // You can trigger things in response to individual characters.
-    // e.g. make the computer beep upon receiving a certain character:
-    if(readchar == 'b') {Beep(500,100);}
+    if(readchar == 'b') {
+      // e.g. make the computer beep upon receiving a certain character:
+      Beep(500,100);
+
+      // or simulate a key press and release:
+      int virtualKeyCode = VkKeyScan(readchar);
+      pressKey(virtualKeyCode, true);
+      pressKey(virtualKeyCode, false);
+    }
 
     // Or you can do something with the accumulated text upon reading a newline character:
     else if(readchar == '\n') {
@@ -166,7 +189,7 @@ while(!keyPressed(VK_ESCAPE) && time(0) < endTime) {
         MessageBox(NULL, readtext, "message received from Arduino", MB_SETFOREGROUND | MB_OK);
       }
 
-      // Convert the received text to a number (sets 0 if not a number).
+      // Convert the received text to a number (strtol() sets 0 if not a number).
       // (Note: atoi() can cause bugs if the number exceeds max int value. strtol() is safe)
       long int nr = strtol(readtext, NULL, 10);
       // Do something if we received a number:
@@ -189,5 +212,3 @@ while(!keyPressed(VK_ESCAPE) && time(0) < endTime) {
 closePort(Arduino);
 return 1;
 }
-
-
